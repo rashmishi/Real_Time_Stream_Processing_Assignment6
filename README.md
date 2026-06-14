@@ -1,5 +1,4 @@
 # IoMT Health Monitoring using Spark Structured Streaming
-
 ## Project Overview
 
 This project implements a Spark Structured Streaming pipeline using the IoMT Health Monitoring dataset.
