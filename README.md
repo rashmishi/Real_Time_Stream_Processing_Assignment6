@@ -66,30 +66,30 @@ spark = SparkSession.builder \
     .appName("IoMT Streaming") \
     .getOrCreate()
 
-Step 3: Create Streaming Directory
-**********************************
+### Step 3: Create Streaming Directory
+
 Create a folder used for streaming simulation:
 stream_dir = "/content/stream_data"
 Copy the dataset into the streaming folder.
 
-Step 4: Define Schema
-*********************
+### Step 4: Define Schema
+
 Define the schema for:
 timestamp
 Patient Number
 Heart Rate (bpm)
 and other required attributes.
 
-Step 5: Read Streaming Data
-********************************
+### Step 5: Read Streaming Data
+
 streaming_df = spark.readStream \
     .format("csv") \
     .option("header", "true") \
     .schema(schema) \
     .load(stream_dir)
 
-Step 6: Create 2-Minute Tumbling Window
-***************************************
+### Step 6: Create 2-Minute Tumbling Window
+
 windowed_df = streaming_df \
     .withWatermark("timestamp", "10 minutes") \
     .groupBy(
@@ -100,8 +100,8 @@ windowed_df = streaming_df \
         avg("Heart Rate (bpm)").alias("avg_heart_rate")
     )
 
-Step 7: Generate Alerts
-***********************
+### Step 7: Generate Alerts
+
 Patients are flagged when:
 Average Heart Rate > 100 bpm
 
@@ -109,8 +109,8 @@ Clinical alerts are generated when:
 Average Heart Rate > 100 bpm
 in two consecutive windows
 
-Step 8: Display Results
-*************************
+### Step 8: Display Results
+
 Display aggregated windows:
 windowed_batch.orderBy(
     desc("avg_heart_rate")
