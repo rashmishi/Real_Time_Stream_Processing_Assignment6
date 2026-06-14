@@ -54,7 +54,6 @@ to Google Colab.
 
 Run the Spark setup cells in the notebook.
 
-Example:
 
 ```python
 !pip install pyspark
@@ -84,6 +83,8 @@ Patient Number
 Heart Rate (bpm)
 and other required attributes.
 
+---
+
 ### Step 5: Read Streaming Data
 
 streaming_df = spark.readStream \
@@ -91,6 +92,8 @@ streaming_df = spark.readStream \
     .option("header", "true") \
     .schema(schema) \
     .load(stream_dir)
+
+---
 
 ### Step 6: Create 2-Minute Tumbling Window
 
@@ -103,7 +106,9 @@ windowed_df = streaming_df \
     .agg(
         avg("Heart Rate (bpm)").alias("avg_heart_rate")
     )
+
 ---
+
 ### Step 7: Generate Alerts
 
 Patients are flagged when:
@@ -114,6 +119,7 @@ Average Heart Rate > 100 bpm
 in two consecutive windows
 
 ---
+
 ### Step 8: Display Results
 
 Display aggregated windows:
@@ -122,6 +128,7 @@ windowed_batch.orderBy(
 ).show(20, truncate=False)
 
 ---
+
 ====================================
 CLINICAL ALERTS
 ====================================
