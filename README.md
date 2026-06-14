@@ -1,108 +1,122 @@
-# Real_Time_Stream_Processing_Assignment6
-# IoMT Health Monitoring – Spark Structured Streaming Pipeline
+# IoMT Health Monitoring using Spark Structured Streaming
 
-## Overview
+## Project Overview
 
 This project implements a Spark Structured Streaming pipeline using the IoMT Health Monitoring dataset.
 
-The pipeline performs the following tasks:
+The pipeline:
 
-1. Reads patient health data from a CSV file.
-2. Simulates streaming ingestion.
-3. Creates 2-minute tumbling windows.
-4. Computes average heart rate per patient for each window.
-5. Detects sustained elevated heart rate (>100 bpm) across two consecutive windows.
-6. Generates clinical alerts with patient numbers.
-7. Saves alert results for further analysis.
-
----
-
-## Project Structure
-project/
-│
-├── patients_data_with_alerts.csv
-├── iomt_alert_pipeline.py
-├── README.md
-└── clinical_alerts_output/
-
+- Simulates streaming from a CSV dataset
+- Uses a 2-minute tumbling window
+- Computes average heart rate per patient
+- Detects elevated heart rate events
+- Identifies patients with sustained elevated heart rate (>100 bpm) across consecutive windows
+- Generates clinical alerts
 
 ---
 
-## Requirements
-
-### Python
-Python 3.9+
-
-### Apache Spark
-Spark 3.x
-
-### PySpark
-Install PySpark:
-```bash
-pip install pyspark
-
-
-****Dataset****
-Place the dataset file in the project directory:
+## Dataset
+Dataset used:
 patients_data_with_alerts.csv
 
-**Required columns:**
+
+Important columns:
+
+- timestamp
+- Patient Number
+- Heart Rate (bpm)
+
+---
+
+## Environment
+
+Project developed and executed using:
+
+- Google Colab
+- Python 3
+- Apache Spark (PySpark)
+- Spark Structured Streaming
+
+---
+
+## Steps to Run the Project
+
+### Step 1: Upload Dataset
+
+Upload the dataset:
+patients_data_with_alerts.csv
+
+
+to Google Colab.
+
+---
+
+### Step 2: Install and Configure Spark
+
+Run the Spark setup cells in the notebook.
+
+Example:
+
+```python
+!pip install pyspark
+
+Create Spark session:
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder \
+    .appName("IoMT Streaming") \
+    .getOrCreate()
+
+Step 3: Create Streaming Directory
+**********************************
+Create a folder used for streaming simulation:
+stream_dir = "/content/stream_data"
+Copy the dataset into the streaming folder.
+
+Step 4: Define Schema
+*********************
+Define the schema for:
 timestamp
 Patient Number
 Heart Rate (bpm)
+and other required attributes.
 
-##############################
-Step 1: Install Spark
-!apt-get install openjdk-11-jdk-headless -qq > /dev/null
-!wget -q https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
-!tar xf spark-3.5.0-bin-hadoop3.tgz
+Step 5: Read Streaming Data
+********************************
+streaming_df = spark.readStream \
+    .format("csv") \
+    .option("header", "true") \
+    .schema(schema) \
+    .load(stream_dir)
 
-!pip install pyspark
-Step 2: Upload Dataset
-
-Upload:
-
-patients_data_with_alerts.csv
-
-to Colab.
-
-Step 3: Run Notebook Cells
-
-Execute all notebook cells sequentially.
-
-Pipeline Workflow
-Step 1: Load Dataset
-df = spark.read.csv(
-    "patients_data_with_alerts.csv",
-    header=True,
-    inferSchema=True
-)
-Step 2: Convert Timestamp
-df = df.withColumn(
-    "timestamp",
-    to_timestamp(col("timestamp"))
-)
-Step 3: Create 2-Minute Tumbling Windows
-windowed_batch = (
-    df.groupBy(
-        window("timestamp", "2 minutes"),
+Step 6: Create 2-Minute Tumbling Window
+***************************************
+windowed_df = streaming_df \
+    .withWatermark("timestamp", "10 minutes") \
+    .groupBy(
+        window(col("timestamp"), "2 minutes"),
         col("Patient Number")
+    ) \
+    .agg(
+        avg("Heart Rate (bpm)").alias("avg_heart_rate")
     )
-    .agg(avg("Heart Rate (bpm)").alias("avg_heart_rate"))
-)
-Step 4: Detect Sustained Elevated Heart Rate
 
-A clinical alert is generated when:
-
+Step 7: Generate Alerts
+***********************
+Patients are flagged when:
 Average Heart Rate > 100 bpm
-for two consecutive windows
 
-Logic:
+Clinical alerts are generated when:
+Average Heart Rate > 100 bpm
+in two consecutive windows
 
-lag(avg_heart_rate)
+Step 8: Display Results
+*************************
+Display aggregated windows:
+windowed_batch.orderBy(
+    desc("avg_heart_rate")
+).show(20, truncate=False)
 
-is used to compare the current window with the previous window for the same patient.
-#################################
 ====================================
 CLINICAL ALERTS
 ====================================
